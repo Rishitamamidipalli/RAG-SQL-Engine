@@ -1,0 +1,10 @@
+python-dotenv
+streamlit
+qdrant-client
+sentence-transformers
+langchain-community
+langchain-text-splitters
+langchain-core
+uuid
+requests
+google-generativeai>=0.3.0

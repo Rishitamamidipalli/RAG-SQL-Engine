@@ -1,0 +1,129 @@
+API Documentation
+API Endpoint
+
+https://aicafe.hcl.com/AICafeService/api/v1/subscription/openai/deployments/{deploymentName}/chat/completions?api-version={apiVerion}
+Method
+POST
+Description
+
+You interact with ChatGPT models via the https://aicafe.hcl.com/AICafeService/api/v1/subscription/openai/deployments/{deploymentName}/chat/completions?api-version={apiVerion} endpoint. The request format is typically JSON with the following structure (to be sent as the request body):
+
+Request Parameters
+Name	Type	Required	Description	Location
+deploymentName	String	Yes	The name of the model deployment to use for this request. Set model value as "gpt-4.1".	Path Variable
+api-version	String	Yes	Specifies the version of the API to use for the request. Set api-version as "2024-12-01-preview".	Query
+api-key	String	Yes	Subscription key for the API, which is required for authentication.	Header
+model	String	Yes	Specify which deployed model you want to use for generating completions, chat responses, embeddings, etc.	Body
+maxTokens	Number	No	Specify the maximum number of tokens that the model should generate in its response (completion).	Body
+temperature	Number	No	The temperature parameter controls the randomness or creativity of the model's responses.	Body
+messages	Array	Yes	An array of message objects representing the conversation history. Each object should have a 'role' (such as 'user', 'assistant', or 'system') and 'content' (the text of the message).	Body
+Subscription Key Example
+
+{
+  "api-key": "your-api-subscription-key-here"
+}
+Request Example
+
+{
+  "model": "gpt-4.1",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What is React?"
+    }
+  ],
+  "maxTokens": 100,
+  "temperature": 0.7
+}
+Response Format
+
+{
+  "id": "chatcmpl-CTOTn5mHsV8NN1IlKhQnDq1S827st",
+  "choices": [
+    {
+      "message": {
+        "role": "assistant",
+        "content": "Certainly! Here are 5 multiple-choice questions (MCQs) related to Java, each with a code snippet and four options. The correct answer is indicated after each question.\n\n---\n\n**1. What will be the output of the following code?**\n\n```java\npublic class Test {\n    public static void main(String[] args) {\n        int x = 5;\n        int y = 10;\n        System.out.println(x++ + ++y);\n    }\n}\n```\n\nA) 15",
+        "toolCalls": null,
+        "functionCall": null,
+        "context": null,
+        "refusal": null
+      },
+      "index": 0,
+      "finishReason": "length",
+      "delta": null,
+      "contentFilterResults": {
+        "sexual": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "violence": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "hate": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "selfHarm": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "profanity": null,
+        "customBlocklists": null,
+        "error": null,
+        "protectedMaterialText": {
+          "filtered": false,
+          "detected": false
+        },
+        "protectedMaterialCode": {
+          "filtered": false,
+          "detected": false,
+          "url": null,
+          "license": null
+        }
+      },
+      "enhancements": null,
+      "logprobs": null
+    }
+  ],
+  "usage": {
+    "completionTokens": 100,
+    "promptTokens": 24,
+    "totalTokens": 124
+  },
+  "createdAt": "2025-10-22T08:27:27Z",
+  "promptFilterResults": [
+    {
+      "promptIndex": 0,
+      "contentFilterResults": {
+        "sexual": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "violence": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "hate": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "selfHarm": {
+          "severity": "safe",
+          "filtered": false
+        },
+        "profanity": null,
+        "customBlocklists": null,
+        "error": null,
+        "jailbreak": {
+          "filtered": false,
+          "detected": false
+        },
+        "indirectAttack": null
+      }
+    }
+  ],
+  "systemFingerprint": "fp_f99638a8d7",
+  "model": "gpt-4.1-2025-04-14"
+}
