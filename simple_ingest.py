@@ -1,24 +1,19 @@
 import os
-from rag_system import HomeLoanRAGSystem
+from pathlib import Path
+from rag_system import RAGSQLEngine
 
-# ===== EDIT THIS PATH TO YOUR PDF FILE =====
-PDF_PATH = r"Sample_RAG_Metadata.pdf"  # Change this to your PDF file name/path
-# ============================================
+# ===== KNOWLEDGE BASE CONFIGURATION =====
+KB_FOLDER = r"knowledge_base"  # Folder containing PDF files
+# =========================================
 
 def main():
-    print("=== Knowledge Base Ingestion ===")
-    
-    # Check if PDF file exists
-    if not os.path.exists(PDF_PATH):
-        print(f"❌ Error: PDF file not found: {PDF_PATH}")
-        print("Please make sure the PDF file exists and update the PDF_PATH variable in this script.")
-        return
-    
-    print(f"📄 PDF file: {PDF_PATH}")
-    print(f"🔧 Initializing RAG system...")
+    print("=" * 60)
+    print("Knowledge Base Ingestion System")
+    print("=" * 60)
     
     # Initialize RAG system with Qdrant Cloud
-    rag_system = HomeLoanRAGSystem()
+    print(f"\n🔧 Initializing RAG system...")
+    rag_system = RAGSQLEngine()
     
     if not rag_system.is_initialized():
         print("❌ Error: Failed to initialize RAG system.")
@@ -27,52 +22,105 @@ def main():
     
     print("✅ RAG system initialized successfully!")
     
-    # Ingest the PDF
-    print(f"📚 Ingesting PDF: {PDF_PATH}")
-    print("This may take a few minutes...")
+    # Get all PDFs from knowledge_base folder
+    kb_path = Path(KB_FOLDER)
+    if not kb_path.exists():
+        print(f"❌ Error: {KB_FOLDER} folder not found!")
+        print(f"   Please create the folder and add PDF files to it.")
+        return
     
-    success = rag_system.ingest_pdf(PDF_PATH)
+    pdf_files = sorted(kb_path.glob("*.pdf"))
+    pdfs_to_ingest = [str(f) for f in pdf_files]
     
-    if success:
-        print("✅ PDF ingested successfully!")
+    if not pdfs_to_ingest:
+        print(f"❌ Error: No PDF files found in {KB_FOLDER} folder!")
+        print(f"   Please add PDF files to the {KB_FOLDER} folder.")
+        return
+    
+    print(f"\n📚 Found {len(pdfs_to_ingest)} PDF files to ingest:")
+    for pdf in pdfs_to_ingest:
+        print(f"   - {pdf}")
+    
+    # Ingest all PDFs
+    print(f"\n🔄 Starting ingestion process...")
+    print("This may take a few minutes...\n")
+    
+    successful_ingestions = 0
+    for pdf_file in pdfs_to_ingest:
+        if not os.path.exists(pdf_file):
+            print(f"⚠️  Skipping {pdf_file} - file not found")
+            continue
         
-        # Show collection info
-        info = rag_system.get_collection_info()
-        print(f"📊 Collection info: {info}")
+        print(f"📄 Ingesting: {pdf_file}")
+        success = rag_system.ingest_pdf(pdf_file)
         
-        # Test search
-        print("\n🔍 Testing search functionality...")
-        test_queries = [
-            
-"List the top 10 customers with the highest transaction amount.",
-"Find all customers who live in Hyderabad and made transactions using UPI.",
-"Show the total transaction amount by each payment method."
-        ]
-        
-        for i, query in enumerate(test_queries, 3):
-            print(f"\n{i}. Test query: {query}")
-            results = rag_system.search_similar_documents(query, top_k=1)
-            if results:
-                print(f"   ✅ Found {len(results)} relevant documents")
-                for j, result in enumerate(results):
-                    print(f"      {j+1}. Score: {result['score']:.3f}")
-                    print(f"         Preview: {result['content'][:100]}...")
-            else:
-                print("   ❌ No relevant documents found")
-
-            # Generate and print SQL answer using RAG + LLM
-            try:
-                sql_answer = rag_system.generate_rag_response(query, top_k=1)
-                print("\n   🧠 Generated SQL:\n" + sql_answer)
-            except Exception as e:
-                print(f"   ❌ Failed to generate SQL: {e}")
-        
-        print("\n🎉 Setup complete! Your RAG system is ready to use.")
-        print("You can now run your Streamlit app: streamlit run main.py")
-        
+        if success:
+            print(f"✅ Successfully ingested: {pdf_file}\n")
+            successful_ingestions += 1
+        else:
+            print(f"❌ Failed to ingest: {pdf_file}\n")
+    
+    # Show final collection info
+    print("\n" + "=" * 60)
+    print("Collection Statistics")
+    print("=" * 60)
+    info = rag_system.get_collection_info()
+    if "error" not in info:
+        print(f"✅ Collection Name: {info.get('name', 'N/A')}")
+        print(f"📊 Total Vectors: {info.get('vectors_count', 0)}")
+        print(f"📈 Status: {info.get('status', 'N/A')}")
     else:
-        print("❌ Failed to ingest PDF")
-        print("Check the error messages above for troubleshooting.")
+        print(f"❌ Error: {info['error']}")
+    
+    # Test search and SQL generation
+    print("\n" + "=" * 60)
+    print("Testing RAG System")
+    print("=" * 60)
+    
+    test_queries = [
+        "Show all customers with their email and city information",
+        "List transactions made using UPI payment method",
+        "Find customers who belong to the Premium segment",
+        "Show total transaction amount grouped by merchant category",
+        "List customers with high churn probability from Customer_Behavior_Metrics",
+    ]
+    
+    print(f"\n🔍 Running {len(test_queries)} test queries...\n")
+    
+    for i, query in enumerate(test_queries, 1):
+        print(f"{i}. Query: {query}")
+        
+        # Search for relevant documents
+        results = rag_system.search_similar_documents(query, top_k=2)
+        if results:
+            print(f"   ✅ Found {len(results)} relevant documents")
+            for j, result in enumerate(results, 1):
+                print(f"      {j}. Score: {result['score']:.3f} | Source: {result['source']}")
+        else:
+            print("   ⚠️  No relevant documents found")
+        
+        # Generate SQL
+        try:
+            sql_answer = rag_system.generate_rag_response(query, top_k=2)
+            print(f"   🧠 Generated SQL:\n      {sql_answer}")
+        except Exception as e:
+            print(f"   ❌ Failed to generate SQL: {e}")
+        
+        print()
+    
+    # Final summary
+    print("=" * 60)
+    if successful_ingestions > 0:
+        print(f"✅ Successfully ingested {successful_ingestions}/{len(pdfs_to_ingest)} PDFs")
+        print("🎉 Your RAG system is ready to use!")
+        print("\n📝 Next steps:")
+        print("   1. Run the Streamlit app: streamlit run App.py")
+        print("   2. Ask natural language questions")
+        print("   3. Get SQL queries generated from your knowledge base")
+    else:
+        print("❌ No PDFs were successfully ingested")
+        print("Please check the error messages above for troubleshooting")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()

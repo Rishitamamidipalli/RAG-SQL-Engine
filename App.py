@@ -1,10 +1,10 @@
 import streamlit as st
-from rag_system import HomeLoanRAGSystem
+from rag_system import RAGSQLEngine
 
 
-def init_rag() -> HomeLoanRAGSystem:
+def init_rag() -> RAGSQLEngine:
     """Initialize and return the singleton RAG system."""
-    rag = HomeLoanRAGSystem()
+    rag = RAGSQLEngine()
     return rag
 
 
@@ -19,10 +19,14 @@ def main():
         st.header("Status")
         if rag.is_initialized():
             st.success("RAG initialized")
+            # Show collection info
+            info = rag.get_collection_info()
+            if "error" not in info:
+                st.info(f"Vectors in DB: {info.get('vectors_count', 0)}")
+            else:
+                st.warning("Could not get collection info")
         else:
             st.error("RAG not initialized")
-
-       
 
         st.markdown("---")
         st.caption("Tip: Ensure HCL_API_KEY is set in .env for SQL generation.")
@@ -41,9 +45,9 @@ def main():
             return
 
         with st.spinner("Retrieving context and generating SQL..."):
-            # Reduced to top_k=1 to minimize token usage
-            context_results = rag.search_similar_documents(query, top_k=1)
-            sql = rag.generate_rag_response(query, top_k=1)
+            # Increased to top_k=15 for comprehensive context retrieval
+            context_results = rag.search_similar_documents(query, top_k=5)
+            sql = rag.generate_rag_response(query, top_k=5)
 
         st.subheader("Generated SQL")
         if sql:
