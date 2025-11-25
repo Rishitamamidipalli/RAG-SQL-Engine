@@ -71,7 +71,12 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Environment Variables
-Create a `.env` file in the project root:
+Copy the sample environment file and add your credentials:
+```bash
+cp .env.sample .env
+```
+
+Then edit `.env` with your actual API keys:
 ```env
 # Qdrant Cloud Configuration
 QDRANT_URL=https://your-cluster-url.us-east-1-0.aws.cloud.qdrant.io:6333
@@ -81,6 +86,8 @@ QDRANT_COLLECTION_NAME=USAA
 # HCL AI Cafe API Configuration
 HCL_API_KEY=your-hcl-api-key
 ```
+
+> **Note**: The `.env.sample` file contains detailed setup instructions and security guidelines.
 
 ### 3. Ingest Knowledge Base
 The system automatically processes all PDFs in the `knowledge_base/` folder:
@@ -183,7 +190,8 @@ USAA/
 │   ├── 02_Transaction_Management.pdf
 │   └── 03_Analytics_and_Reporting.pdf
 ├── requirements.txt           # Python dependencies
-├── .env                      # Environment variables (create this)
+├── .env.sample               # Environment template (copy to .env)
+├── .env                      # Environment variables (create from sample)
 ├── .gitignore               # Git ignore rules
 └── README.md                # This documentation
 ```
