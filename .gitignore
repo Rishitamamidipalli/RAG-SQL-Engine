@@ -73,10 +73,8 @@ Thumbs.db
 .DS_Store
 
 # Project specific
-*.pdf
 sample_*.json
 key_error.py
-api_documentation.txt
 
 # Temporary files
 *.tmp
